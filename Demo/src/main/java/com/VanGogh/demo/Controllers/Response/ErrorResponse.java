@@ -1,8 +1,6 @@
 package com.VanGogh.demo.Controllers.Response;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 

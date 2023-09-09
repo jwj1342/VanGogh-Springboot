@@ -28,7 +28,7 @@ public class UserEntity {
     @Column
     private String phoneNumber;
 
-    @Column(nullable = false)
+    @Column
     private LocalDateTime registrationTime;
 
     @OneToOne

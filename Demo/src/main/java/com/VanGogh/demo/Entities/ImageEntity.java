@@ -3,6 +3,7 @@ package com.VanGogh.demo.Entities;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
@@ -30,7 +31,6 @@ public class ImageEntity {
     /**
      * 图片URL
      */
-    @Column(nullable = false)
     private String imageUrl;
 
     /**
@@ -41,8 +41,7 @@ public class ImageEntity {
     /**
      * 图片创建时间
      */
-    @Column(nullable = false)
-    private String createTime;
+    private LocalDateTime createTime;
 
     // 其他自定义方法或属性
 
@@ -61,7 +60,7 @@ public class ImageEntity {
                 && Objects.equals(id, that.id)
                 && Objects.equals(user, that.user)
                 && Objects.equals(imageUrl, that.imageUrl)
-                && Objects.equals(title, that.title)
-                && Objects.equals(createTime, that.createTime);
+                && Objects.equals(title, that.title);
+                //&& Objects.equals(createTime, that.createTime);
     }
 }

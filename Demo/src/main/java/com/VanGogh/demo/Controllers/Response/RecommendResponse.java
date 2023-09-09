@@ -27,8 +27,4 @@ public class RecommendResponse {
      * 时间戳
      */
     private LocalDateTime timestamp;
-    /**
-     * 获取推荐成功标志
-     */
-    private String success;
 }
