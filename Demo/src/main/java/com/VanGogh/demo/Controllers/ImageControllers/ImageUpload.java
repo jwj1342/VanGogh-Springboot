@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @RestController
@@ -38,13 +39,13 @@ public class ImageUpload {
             , @RequestParam("imageFile") MultipartFile imageFile) {
         try {
             if (imageFile.isEmpty()) {
-                ErrorResponse errorResponse = new ErrorResponse("No image file provided");
+                ErrorResponse errorResponse = new ErrorResponse(404,"上传失败，图片未找到！ " , LocalDateTime.now());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
             }
 
             // 验证文件大小
             if (imageFile.getSize() > MAX_FILE_SIZE.toBytes()) {
-                ErrorResponse errorResponse = new ErrorResponse("File size exceeds maximum allowed limit of 10MB");
+                ErrorResponse errorResponse = new ErrorResponse(413,"上传失败，最大上传10M！" , LocalDateTime.now());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
             }
 
@@ -63,7 +64,7 @@ public class ImageUpload {
 
             return ResponseEntity.ok(uploadResponse);
         } catch (IOException e) {
-            ErrorResponse errorResponse = new ErrorResponse("Failed to upload image: " + e.getMessage());
+            ErrorResponse errorResponse = new ErrorResponse(400,"上传失败: " + e.getMessage(), LocalDateTime.now());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }

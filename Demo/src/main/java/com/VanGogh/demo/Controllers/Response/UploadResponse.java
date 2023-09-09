@@ -1,26 +1,26 @@
 package com.VanGogh.demo.Controllers.Response;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
 /**
  * 上传响应类，用于封装上传图片的信息。
  */
+@Data
 public class UploadResponse {
+    /**
+     * 上传图片的url
+     */
     private String imageUrl;
-
     /**
-     * 获取上传图片的URL地址。
-     *
-     * @return 图片的URL地址
+     * 上传成功信息
      */
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
+    private String success;
     /**
-     * 设置上传图片的URL地址。
-     *
-     * @param imageUrl 图片的URL地址
+     * 时间戳
      */
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
+    private LocalDateTime timestamp;
 }

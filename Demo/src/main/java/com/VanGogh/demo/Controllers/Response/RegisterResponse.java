@@ -1,45 +1,32 @@
 package com.VanGogh.demo.Controllers.Response;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
 /**
  * 注册响应类，用于封装注册信息。
  */
+@Data
 public class RegisterResponse {
-    private String password;
+    /**
+     * 用户名
+     */
     private String userName;
-
     /**
-     * 获取用户密码。
-     *
-     * @return 用户密码
+     * 注册成功信息
      */
-    public String getPassword() {
-        return password;
-    }
-
+    private String success;
     /**
-     * 设置用户密码。
-     *
-     * @param password 用户密码
+     * 时间戳
      */
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    private LocalDateTime timestamp;
 
-    /**
-     * 获取用户名。
-     *
-     * @return 用户名
-     */
-    public String getUserName() {
-        return userName;
-    }
-
-    /**
-     * 设置用户名。
-     *
-     * @param userName 用户名
-     */
-    public void setUserName(String userName) {
+    public RegisterResponse(String userName, String success, LocalDateTime timestamp) {
         this.userName = userName;
+        this.success = success;
+        this.timestamp = timestamp;
     }
 }

@@ -1,138 +1,67 @@
 package com.VanGogh.demo.Entities;
 
 import jakarta.persistence.*;
-import org.springframework.web.multipart.MultipartFile;
+import lombok.Data;
 
-/**
- * 图片实体类。
- */
+import java.util.Objects;
+
 @Entity
+@Data // 自动生成getter、setter、equals、hashCode等方法
 public class ImageEntity {
+    /**
+     * 图片ID
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
+    /**
+     * 图片所属用户
+     */
     @ManyToOne
     @JoinColumn(name = "user_id")
     private UserEntity user;
 
-    @Column(name = "likes")
+    /**
+     * 图片点赞数
+     */
     private int likes;
 
-    @Column(name = "image_url")
+    /**
+     * 图片URL
+     */
+    @Column(nullable = false)
     private String imageUrl;
 
-    @Column(name = "title")
+    /**
+     * 图片标题
+     */
     private String title;
 
-    @Column(name = "createTime")
+    /**
+     * 图片创建时间
+     */
+    @Column(nullable = false)
     private String createTime;
 
+    // 其他自定义方法或属性
 
     /**
-     * 无参构造函数。
-     */
-    public ImageEntity() {
-    }
-
-    /**
-     * 获取图片标题。
+     * 重写equals方法，判断两个图片实体是否相同。
      *
-     * @return 图片标题
+     * @param o 要比较的对象
+     * @return 如果两个图片实体属性相同，则返回true；否则返回false
      */
-    public String getTitle() {
-        return title;
-    }
-
-    /**
-     * 设置图片标题。
-     *
-     * @param title 图片标题
-     */
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    /**
-     * 获取图片创建时间。
-     *
-     * @return 图片创建时间
-     */
-    public String getCreateTime() {
-        return createTime;
-    }
-
-    /**
-     * 设置图片创建时间。
-     *
-     * @param createTime 图片创建时间
-     */
-    public void setCreateTime(String createTime) {
-        this.createTime = createTime;
-    }
-
-    /**
-     * 获取图片所属用户。
-     *
-     * @return 图片所属用户
-     */
-    public UserEntity getUser() {
-        return user;
-    }
-
-    /**
-     * 设置图片所属用户。
-     *
-     * @param user 图片所属用户
-     */
-    public void setUser(UserEntity user) {
-        this.user = user;
-    }
-
-    /**
-     * 获取图片点赞数。
-     *
-     * @return 图片点赞数
-     */
-    public int getLikes() {
-        return likes;
-    }
-
-    /**
-     * 设置图片点赞数。
-     *
-     * @param likes 图片点赞数
-     */
-    public void setLikes(int likes) {
-        this.likes = likes;
-    }
-
-    /**
-     * 获取图片URL。
-     *
-     * @return 图片URL
-     */
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    /**
-     * 设置图片URL。
-     *
-     * @param imageUrl 图片URL
-     */
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-
-    /**
-     * 获取图片ID。
-     *
-     * @return 图片ID
-     */
-    public Long getId() {
-        return id;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ImageEntity that = (ImageEntity) o;
+        return likes == that.likes
+                && Objects.equals(id, that.id)
+                && Objects.equals(user, that.user)
+                && Objects.equals(imageUrl, that.imageUrl)
+                && Objects.equals(title, that.title)
+                && Objects.equals(createTime, that.createTime);
     }
 }

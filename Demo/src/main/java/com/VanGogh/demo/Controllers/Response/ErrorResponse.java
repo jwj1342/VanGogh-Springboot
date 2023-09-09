@@ -1,26 +1,32 @@
 package com.VanGogh.demo.Controllers.Response;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
 /**
  * 错误响应类，用于封装错误信息。
  */
+@Data
 public class ErrorResponse {
-    private String error;
-
     /**
-     * 构造一个错误响应对象。
-     *
-     * @param error 错误信息
+     * 错误码
      */
-    public ErrorResponse(String error) {
-        this.error = error;
-    }
-
+    private int errorCode;
     /**
-     * 获取错误信息。
-     *
-     * @return 错误信息
+     * 错误信息
      */
-    public String getError() {
-        return error;
+    private String errorMessage;
+    /**
+     * 错误时间戳
+     */
+    private LocalDateTime timestamp;
+
+    public ErrorResponse(int errorCode, String errorMessage, LocalDateTime timestamp) {
+        this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
+        this.timestamp = timestamp;
     }
 }
