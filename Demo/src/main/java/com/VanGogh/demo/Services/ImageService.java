@@ -43,13 +43,13 @@ public class ImageService {
     public ResponseEntity<?> uploadImage(String userName, String title, MultipartFile imageFile) {
         try {
             if (imageFile.isEmpty()) {
-                ErrorResponse errorResponse = new ErrorResponse(404, "上传失败，图片未找到！ ", LocalDateTime.now());
+                ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(),404, "上传失败，图片未找到！ ","/image.upload");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
             }
 
             // 验证文件大小
             if (imageFile.getSize() > MAX_FILE_SIZE.toBytes()) {
-                ErrorResponse errorResponse = new ErrorResponse(413, "上传失败，最大上传10M！", LocalDateTime.now());
+                ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(),413, "上传失败，最大上传10M！", "/image.upload");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
             }
             // 图片实体创建
@@ -61,12 +61,13 @@ public class ImageService {
             imageRepository.save(imageEntity);
 
             UploadResponse uploadResponse = new UploadResponse();
+            uploadResponse.setSuccess("上传成功！");
             uploadResponse.setTimestamp(LocalDateTime.now());
             uploadResponse.setImageUrl(imageEntity.getImageUrl());
 
             return ResponseEntity.ok(uploadResponse);
         } catch (IOException e) {
-            ErrorResponse errorResponse = new ErrorResponse(400, "上传失败: " + e.getMessage(), LocalDateTime.now());
+            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(),400, "上传失败: " + e.getMessage(), "/image/upload");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }

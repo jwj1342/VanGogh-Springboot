@@ -10,21 +10,27 @@ import java.time.LocalDateTime;
 @Data
 public class ErrorResponse {
     /**
-     * 错误码
-     */
-    private int errorCode;
-    /**
-     * 错误信息
-     */
-    private String errorMessage;
-    /**
      * 错误时间戳
      */
     private LocalDateTime timestamp;
+    /**
+     * 错误码
+     */
+    private int status;
+    /**
+     * 错误信息
+     */
+    private String error;
 
-    public ErrorResponse(int errorCode, String errorMessage, LocalDateTime timestamp) {
-        this.errorCode = errorCode;
-        this.errorMessage = errorMessage;
+    public ErrorResponse(LocalDateTime timestamp, int status, String error, String path) {
         this.timestamp = timestamp;
+        this.status = status;
+        this.error = error;
+        this.path = path;
     }
+
+    /**
+     * 错误路径
+     */
+    private String path;
 }

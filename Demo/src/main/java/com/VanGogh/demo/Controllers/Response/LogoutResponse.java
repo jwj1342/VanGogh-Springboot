@@ -1,20 +1,10 @@
 package com.VanGogh.demo.Controllers.Response;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-
-/**
- * 登录响应类，用于封装登录信息。
- */
 @Data
-public class LoginResponse {
-
-    /**
-     * 用户名
-     */
+public class LogoutResponse {
     private String username;
 
     /**
@@ -28,11 +18,11 @@ public class LoginResponse {
     private LocalDateTime timestamp;
 
     /**
-     * 登录成功标志
+     * 登出成功标志
      */
     private String success;
 
-    public LoginResponse(String username, String email,  String success,LocalDateTime timestamp) {
+    public LogoutResponse(String username, String email,  String success,LocalDateTime timestamp) {
         this.username = username;
         this.email = email;
         this.timestamp = timestamp;

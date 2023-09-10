@@ -4,6 +4,7 @@ import com.VanGogh.demo.Controllers.Request.LoginRequest;
 import com.VanGogh.demo.Services.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,14 +20,9 @@ public class UserLogin {
         return userService.login(loginRequest, session);
     }
 
-    @GetMapping("/protected")
-    public String protectedEndpoint(HttpSession session) {
-        return userService.protectedEndpoint(session);
+    @PostMapping(path = "/protected")
+    public ResponseEntity<?> protectedEndpoint(@Param("userName") String userName, HttpSession session) {
+        return userService.protectedEndpoint(userName,session);
     }
 
-
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpSession session) {
-        return userService.logout(session);
-    }
 }

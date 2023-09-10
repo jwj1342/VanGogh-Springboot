@@ -31,8 +31,14 @@ public class UserEntity {
     @Column
     private LocalDateTime registrationTime;
 
-    @OneToOne
-    @PrimaryKeyJoinColumn
-    private UserLoginStatusEntity loginStatus;
+    @Column
+    private boolean isLogin;
 
+    public boolean getIsLogin() {
+        return isLogin;
+    }
+
+    public void setLogin(boolean login) {
+        isLogin = login;
+    }
 }

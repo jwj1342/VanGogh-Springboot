@@ -16,7 +16,7 @@ public class ImageRecommend {
     @Autowired
     private ImageService imageService;
 
-    @GetMapping("/getRecommend")
+    @GetMapping(path = "/getRecommend")
     public ResponseEntity<List<RecommendResponse>> getRecommendPicture() {
         return imageService.getRecommendPicture();
     }
