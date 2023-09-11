@@ -101,14 +101,19 @@ public class UserService {
 
     public ResponseEntity<?> login(LoginRequest loginRequest, HttpSession session) {
         UserEntity user = userRepository.findUserEntityByUsername(loginRequest.getUserName());
+        session.setAttribute("userName",loginRequest.getUserName());
+        // 验证用户登录
+        if (user == null) {
+            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "用户不存在", "/user/login");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }
+        if (!user.getPassword().equals(hashPassword(loginRequest.getPassword()))) {
+            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 401, "用户名或密码不正确", "/user/login");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }
         // 检查用户是否已经登录，如果已经登录则拒绝登录
         if (user.getIsLogin() == true) {
             ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 401, "用户已登录", "/user/login");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-        }
-        // 验证用户登录
-        if (user == null || !user.getPassword().equals(hashPassword(loginRequest.getPassword()))) {
-            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 401, "用户名或密码不正确", "/user/login");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
 
@@ -129,11 +134,12 @@ public class UserService {
         return ResponseEntity.ok(loginResponse);
     }
 
-    public ResponseEntity<?> protectedEndpoint(String userName, HttpSession session) {
+    public ResponseEntity<?> protectedEndpoint(HttpSession session) {
+        String userName= (String) session.getAttribute("userName");
         UserEntity user = userRepository.findUserEntityByUsername(userName);
         // 检查会话中的JWT令牌是否有效
         String jwtToken = (String) session.getAttribute("jwtToken");
-        if (jwtToken == null || !verifyJwtToken(jwtToken)) {
+        if (user.getIsLogin()==false||jwtToken == null || !verifyJwtToken(jwtToken)) {
             user.setLogin(false);
             userRepository.save(user);
             ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 401, "未登录", "/user/login");
