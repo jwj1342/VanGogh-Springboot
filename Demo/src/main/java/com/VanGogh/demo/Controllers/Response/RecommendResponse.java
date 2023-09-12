@@ -12,6 +12,14 @@ import java.time.LocalDateTime;
 @Data
 public class RecommendResponse {
     /**
+     * 时间戳
+     */
+    private LocalDateTime timestamp;
+    /**
+     * 状态码
+     */
+    private int statusCode;
+    /**
      * 标题
      */
     private String title;
@@ -23,8 +31,4 @@ public class RecommendResponse {
      * 点赞数
      */
     private int likes;
-    /**
-     * 时间戳
-     */
-    private LocalDateTime timestamp;
 }

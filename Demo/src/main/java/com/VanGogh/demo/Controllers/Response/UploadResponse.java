@@ -12,15 +12,19 @@ import java.time.LocalDateTime;
 @Data
 public class UploadResponse {
     /**
+     * 时间戳
+     */
+    private LocalDateTime timestamp;
+    /**
+     * 状态码
+     */
+    private int statusCode;
+    /**
      * 上传图片的url
      */
     private String imageUrl;
     /**
-     * 上传成功信息
+     * 处理后图片的url
      */
-    private String success;
-    /**
-     * 时间戳
-     */
-    private LocalDateTime timestamp;
+    private String imageUrlAfter;
 }

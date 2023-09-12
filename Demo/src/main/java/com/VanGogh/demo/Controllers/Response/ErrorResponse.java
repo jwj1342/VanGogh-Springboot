@@ -13,21 +13,22 @@ public class ErrorResponse {
      * 错误时间戳
      */
     private LocalDateTime timestamp;
+
+    public ErrorResponse(LocalDateTime timestamp, int statusCode, String error, String path) {
+        this.timestamp = timestamp;
+        this.statusCode = statusCode;
+        this.error = error;
+        this.path = path;
+    }
+
     /**
      * 错误码
      */
-    private int status;
+    private int statusCode;
     /**
      * 错误信息
      */
     private String error;
-
-    public ErrorResponse(LocalDateTime timestamp, int status, String error, String path) {
-        this.timestamp = timestamp;
-        this.status = status;
-        this.error = error;
-        this.path = path;
-    }
 
     /**
      * 错误路径

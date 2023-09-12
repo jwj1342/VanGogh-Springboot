@@ -20,9 +20,9 @@ public class UserLogin {
         return userService.login(loginRequest, session);
     }
 
-    @GetMapping(path = "/protected")
-    public ResponseEntity<?> protectedEndpoint(HttpSession session) {
-        return userService.protectedEndpoint(session);
+    @PostMapping(path = "/protected")
+    public ResponseEntity<?> protectedEndpoint(@RequestParam String userName, HttpSession session) {
+        return userService.protectedEndpoint(userName,session);
     }
 
 }

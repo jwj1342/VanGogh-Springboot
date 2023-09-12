@@ -11,6 +11,15 @@ import java.time.LocalDateTime;
  */
 @Data
 public class LoginResponse {
+    /**
+     * 时间戳
+     */
+    private LocalDateTime timestamp;
+
+    /**
+     * 状态码
+     */
+    private int statusCode;
 
     /**
      * 用户名
@@ -22,20 +31,10 @@ public class LoginResponse {
      */
     private String email;
 
-    /**
-     * 时间戳
-     */
-    private LocalDateTime timestamp;
-
-    /**
-     * 登录成功标志
-     */
-    private String success;
-
-    public LoginResponse(String username, String email,  String success,LocalDateTime timestamp) {
+    public LoginResponse(LocalDateTime timestamp, int statusCode, String username, String email) {
+        this.timestamp = timestamp;
+        this.statusCode = statusCode;
         this.username = username;
         this.email = email;
-        this.timestamp = timestamp;
-        this.success = success;
     }
 }

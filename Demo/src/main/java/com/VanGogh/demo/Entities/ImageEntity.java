@@ -32,6 +32,10 @@ public class ImageEntity {
      * 图片URL
      */
     private String imageUrl;
+    /**
+     * 处理过后图片URL
+     */
+    private String imageUrlAfter;
 
     /**
      * 图片标题
@@ -42,25 +46,4 @@ public class ImageEntity {
      * 图片创建时间
      */
     private LocalDateTime createTime;
-
-    // 其他自定义方法或属性
-
-    /**
-     * 重写equals方法，判断两个图片实体是否相同。
-     *
-     * @param o 要比较的对象
-     * @return 如果两个图片实体属性相同，则返回true；否则返回false
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ImageEntity that = (ImageEntity) o;
-        return likes == that.likes
-                && Objects.equals(id, that.id)
-                && Objects.equals(user, that.user)
-                && Objects.equals(imageUrl, that.imageUrl)
-                && Objects.equals(title, that.title);
-                //&& Objects.equals(createTime, that.createTime);
-    }
 }

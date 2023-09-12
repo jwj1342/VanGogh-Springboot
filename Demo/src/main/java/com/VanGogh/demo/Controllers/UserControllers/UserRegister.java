@@ -22,12 +22,11 @@ public class UserRegister {
      * 用户注册
      *
      * @param request        注册请求对象
-     * @param bindingResult  请求参数绑定结果
      * @return ResponseEntity 包含注册响应或错误响应
      */
     @PostMapping(path = "/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest request, BindingResult bindingResult) {
-        return userService.registerUser(request, bindingResult);
+    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest request) {
+        return userService.registerUser(request);
     }
 
 }

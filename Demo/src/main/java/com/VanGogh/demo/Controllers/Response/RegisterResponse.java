@@ -12,21 +12,22 @@ import java.time.LocalDateTime;
 @Data
 public class RegisterResponse {
     /**
-     * 用户名
-     */
-    private String userName;
-    /**
-     * 注册成功信息
-     */
-    private String success;
-    /**
      * 时间戳
      */
     private LocalDateTime timestamp;
+    /**
+     * 状态码
+     */
+    private int statusCode;
 
-    public RegisterResponse(String userName, String success, LocalDateTime timestamp) {
-        this.userName = userName;
-        this.success = success;
+    public RegisterResponse(LocalDateTime timestamp, int statusCode, String userName) {
         this.timestamp = timestamp;
+        this.statusCode = statusCode;
+        this.userName = userName;
     }
+
+    /**
+     * 用户名
+     */
+    private String userName;
 }
