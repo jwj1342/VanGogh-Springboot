@@ -34,8 +34,8 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
-    @Value("${security.key}")
-    private String securityKey;
+
+    Key key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
     @Value("${session.timeout}")
     private int sessionTimeout;
@@ -195,13 +195,13 @@ public class UserService {
                 .setSubject(username)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
-                .signWith(SignatureAlgorithm.HS512, securityKey)
+                .signWith(SignatureAlgorithm.HS512, key)
                 .compact();
     }
 
     private boolean verifyJwtToken(String jwtToken) {
         try {
-            Jwts.parser().setSigningKey(securityKey).parseClaimsJws(jwtToken);
+            Jwts.parser().setSigningKey(key).parseClaimsJws(jwtToken);
             return true;
         } catch (ExpiredJwtException | MalformedJwtException ex) {
             return false;
