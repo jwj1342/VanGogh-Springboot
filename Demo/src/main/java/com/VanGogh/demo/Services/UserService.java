@@ -81,7 +81,7 @@ public class UserService {
         user.setUsername(request.getUserName());
         user.setPassword(hashedPassword);
         user.setRegistrationTime(LocalDateTime.now());
-        //user.setLogin(true);
+        user.setLogin(true);
         userRepository.save(user);
 
         // 创建响应对象
@@ -135,6 +135,10 @@ public class UserService {
             ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "用户名为空", "/user/login");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
+        if (userRepository.findUserEntityByUsername(userName)==null) {
+            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "上传失败，用户未找到！ ", "/image.upload");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
         UserEntity user = userRepository.findUserEntityByUsername(userName);
         try {
             // 检查会话中的JWT令牌是否有效
@@ -161,6 +165,10 @@ public class UserService {
         if (userName == null) {
             ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "用户名为空", "/user/login");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }
+        if (userRepository.findUserEntityByUsername(userName)==null) {
+            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "上传失败，用户未找到！ ", "/image.upload");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
         try {
             // 根据用户名查询用户信息

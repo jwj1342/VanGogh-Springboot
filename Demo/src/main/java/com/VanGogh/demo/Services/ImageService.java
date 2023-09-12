@@ -59,6 +59,10 @@ public class ImageService {
                 ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "上传失败，用户未找到！ ", "/image.upload");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
             }
+            if (userRepository.findUserEntityByUsername(userName)==null) {
+                ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "上传失败，用户未找到！ ", "/image.upload");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+            }
             if (imageFile.isEmpty()) {
                 ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "上传失败，图片未找到！ ", "/image.upload");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
