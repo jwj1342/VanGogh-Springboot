@@ -153,6 +153,7 @@ public class ImageService {
             customImage.setUrl(image.getImageUrl());
             customImage.setTitle(image.getTitle());
             customImage.setLikes(image.getLikes());
+            customImage.setStatusCode(200);
             customImage.setTimestamp(LocalDateTime.now());
             customImages.add(customImage);
         }
