@@ -100,7 +100,9 @@ public class ImageService {
             for (ImageEntity imageEntity1 : imageEntities) {
                 UploadResponse uploadResponse = new UploadResponse();
                 uploadResponse.setTimestamp(LocalDateTime.now());
+                uploadResponse.setStatusCode(200);
                 uploadResponse.setImageUrl(imageEntity1.getImageUrl());
+                uploadResponse.setImageUrlAfter(imageEntity1.getImageUrlAfter());
                 uploadResponseList.add(uploadResponse);
             }
 
