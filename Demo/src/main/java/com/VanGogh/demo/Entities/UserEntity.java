@@ -30,15 +30,4 @@ public class UserEntity {
 
     @Column
     private LocalDateTime registrationTime;
-
-    @Column
-    private boolean isLogin;
-
-    public boolean getIsLogin() {
-        return isLogin;
-    }
-
-    public void setLogin(boolean login) {
-        isLogin = login;
-    }
 }

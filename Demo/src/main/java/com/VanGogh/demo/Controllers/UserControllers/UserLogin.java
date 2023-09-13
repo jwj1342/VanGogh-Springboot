@@ -21,8 +21,8 @@ public class UserLogin {
     }
 
     @PostMapping(path = "/protected")
-    public ResponseEntity<?> protectedEndpoint(@RequestParam String userName, HttpSession session) {
-        return userService.protectedEndpoint(userName,session);
+    public ResponseEntity<?> protectedEndpoint(HttpSession session) {
+        return userService.protectedEndpoint(session);
     }
 
 }

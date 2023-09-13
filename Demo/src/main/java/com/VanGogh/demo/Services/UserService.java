@@ -8,10 +8,7 @@ import com.VanGogh.demo.Controllers.Response.LogoutResponse;
 import com.VanGogh.demo.Controllers.Response.RegisterResponse;
 import com.VanGogh.demo.Entities.UserEntity;
 import com.VanGogh.demo.Repositories.UserRepository;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BindingResult;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
@@ -62,9 +58,9 @@ public class UserService {
      * @param request 注册请求对象
      * @return ResponseEntity 包含注册响应或错误响应
      */
-    public ResponseEntity<?> registerUser(RegisterRequest request) {
-        if (request.getUserName()==null){
-            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "注册失败，用户名为空！ ", "/image.upload");
+    public ResponseEntity<?> registerUser(RegisterRequest request, HttpSession session) {
+        if (request.getUserName() == null) {
+            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "注册失败，用户名为空！ ", "/user/register");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
         // 检查用户名是否已存在
@@ -81,11 +77,15 @@ public class UserService {
         user.setUsername(request.getUserName());
         user.setPassword(hashedPassword);
         user.setRegistrationTime(LocalDateTime.now());
-        user.setLogin(true);
         userRepository.save(user);
+        // 如果验证成功，创建JWT令牌并存储到会话中
+        String jwtToken = generateJwtToken(user.getUsername());
+        session.setAttribute("jwtToken", jwtToken);
+        session.setMaxInactiveInterval((int) sessionTimeout);
+
 
         // 创建响应对象
-        RegisterResponse registerResponse = new RegisterResponse(LocalDateTime.now(),200,user.getUsername());
+        RegisterResponse registerResponse = new RegisterResponse(LocalDateTime.now(), 200, user.getUsername());
 
         return ResponseEntity.ok(registerResponse);
     }
@@ -100,7 +100,11 @@ public class UserService {
 
     public ResponseEntity<?> login(LoginRequest loginRequest, HttpSession session) {
         if (loginRequest.getUserName() == null) {
-            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "用户名为空", "/user/login");
+            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 400, "用户名为空", "/user/login");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }
+        if (session.getAttribute("jwtToken")!=null) {
+            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 400, "用户已登录", "/user/login");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
         UserEntity user = userRepository.findUserEntityByUsername(loginRequest.getUserName());
@@ -113,48 +117,30 @@ public class UserService {
             ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 400, "用户密码错误", "/user/login");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
-        // 检查用户是否已经登录，如果已经登录则拒绝登录
-        if (user.getIsLogin() == true) {
-            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 409, "用户已登录", "/user/login");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-        }
         // 如果验证成功，创建JWT令牌并存储到会话中
         String jwtToken = generateJwtToken(user.getUsername());
         session.setAttribute("jwtToken", jwtToken);
         session.setMaxInactiveInterval((int) sessionTimeout);
-        user.setLogin(true);
-        // 保存到数据库
-        userRepository.save(user);
 
-        LoginResponse loginResponse = new LoginResponse(LocalDateTime.now(),200,user.getUsername(),user.getEmail());
+        LoginResponse loginResponse = new LoginResponse(LocalDateTime.now(), 200, user.getUsername(), user.getEmail());
         return ResponseEntity.ok(loginResponse);
     }
 
-    public ResponseEntity<?> protectedEndpoint(String userName, HttpSession session) {
-        if (userName== null) {
-            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "用户名为空", "/user/login");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-        }
-        if (userRepository.findUserEntityByUsername(userName)==null) {
-            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "上传失败，用户未找到！ ", "/image.upload");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
-        UserEntity user = userRepository.findUserEntityByUsername(userName);
+    public ResponseEntity<?> protectedEndpoint(HttpSession session) {
         try {
             // 检查会话中的JWT令牌是否有效
             String jwtToken = (String) session.getAttribute("jwtToken");
-            if ((user.getIsLogin() == false) || (jwtToken == null) || !verifyJwtToken(jwtToken)) {
-                user.setLogin(false);
-                userRepository.save(user);
+            if ((jwtToken == null) || !verifyJwtToken(jwtToken)) {
                 ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 401, "用户未登录", "/user/login");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
             }
+            String userName = getUsernameFromJwtToken((String) session.getAttribute("jwtToken"));
+            UserEntity user = userRepository.findUserEntityByUsername(userName);
             // 执行受保护的业务逻辑
-            LoginResponse loginResponse = new LoginResponse(LocalDateTime.now(),200,user.getUsername(),user.getEmail());
+            LoginResponse loginResponse = new LoginResponse(LocalDateTime.now(), 200, user.getUsername(), user.getEmail());
             return ResponseEntity.ok(loginResponse);
         } catch (IllegalStateException e) {
             // 会话超时或已失效
-            user.setLogin(false);
             ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 419, "会话超时或已失效", "/user/protected");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
@@ -162,36 +148,23 @@ public class UserService {
 
 
     public ResponseEntity<?> logout(String userName, HttpSession session) {
-        if (userName == null) {
-            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "用户名为空", "/user/login");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-        }
-        if (userRepository.findUserEntityByUsername(userName)==null) {
-            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "上传失败，用户未找到！ ", "/image.upload");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
         try {
-            // 根据用户名查询用户信息
             UserEntity user = userRepository.findUserEntityByUsername(userName);
-            if (user.getIsLogin()) {
-
-                // 清除登录状态
-                user.setLogin(false);
-                session.removeAttribute("jwtToken");
-                // 更新用户信息
-                userRepository.save(user);
-
-                LogoutResponse logoutResponse = new LogoutResponse(LocalDateTime.now(),200,user.getUsername(),user.getEmail());
-                return ResponseEntity.ok(logoutResponse);
-            } else {
-                // 处理未登录的情况
-                ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 401, "未登录", "/user/login");
+            if (user==null){
+                ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "用户不存在", "/user/login");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
             }
-        } catch (Exception e) {
-            // 处理异常情况
-            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 500, "服务器错误", "/user/logout");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+            if (session.getAttribute("jwtToken")==null) {
+                ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 400, "用户已登出", "/user/login");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+            }
+            session.removeAttribute("jwtToken");
+            LogoutResponse logoutResponse = new LogoutResponse(LocalDateTime.now(), 200, user.getUsername(), user.getEmail());
+            return ResponseEntity.ok(logoutResponse);
+        } catch (IllegalStateException e) {
+            // 会话超时或已失效
+            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 419, "会话超时或已失效", "/user/protected");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
     }
 
@@ -215,5 +188,15 @@ public class UserService {
             return false;
         }
     }
+
+    private String getUsernameFromJwtToken(String jwtToken) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(key)
+                .parseClaimsJws(jwtToken)
+                .getBody();
+
+        return claims.getSubject();
+    }
+
 }
 

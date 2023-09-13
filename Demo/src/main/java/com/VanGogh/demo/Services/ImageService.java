@@ -14,10 +14,11 @@ import com.obs.services.model.PutObjectResult;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.util.unit.DataSize;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -29,8 +30,10 @@ import java.util.*;
  */
 @Service
 public class ImageService {
-    @Value("${file.maxSize}")
-    private DataSize maxFileSize;
+    //    @Value("${file.maxSize}")
+//    private DataSize maxFileSize;
+// 默认单个文件大小为1MB
+    private DataSize maxFileSize = DataSize.ofMegabytes(50L);
 
     @Value("${obs.endpoint}")
     private String obsEndpoint;
@@ -44,6 +47,7 @@ public class ImageService {
     private UserRepository userRepository;
     @Autowired
     private ImageRepository imageRepository;
+    ImageHandleRequest imageHandleRequest = new ImageHandleRequest();
 
     /**
      * 上传图片并保存到数据库。
@@ -55,11 +59,11 @@ public class ImageService {
      */
     public ResponseEntity<?> uploadImage(String userName, String title, MultipartFile imageFile) {
         try {
-            if (userName==null) {
+            if (userName == null) {
                 ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "上传失败，用户未找到！ ", "/image.upload");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
             }
-            if (userRepository.findUserEntityByUsername(userName)==null) {
+            if (userRepository.findUserEntityByUsername(userName) == null) {
                 ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "上传失败，用户未找到！ ", "/image.upload");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
             }
@@ -75,24 +79,22 @@ public class ImageService {
             }
             // 图片实体创建
             ImageEntity imageEntity = new ImageEntity();
-            String imgUrlBefore=saveImage(imageFile);
+            String imgUrlBefore = saveImage(imageFile);
             imageEntity.setImageUrl(imgUrlBefore);
 
             //图片处理请求封装
-//            ImageHandleRequest imageHandleRequest=new ImageHandleRequest();
-//            imageHandleRequest.setImageUrlBefore(imgUrlBefore);
-//            imageHandleRequest.setTimestamp(LocalDateTime.now());
+            imageHandleRequest.setImage_url(imgUrlBefore);
+
             //发送图片处理请求
-            //String imgUrlAfter=
+            String imgUrlAfter = saveHandledImage(getHandledImage(imageHandleRequest));
             //处理后的url赋值
-            //imageEntity.setImageUrlAfter();
+            imageEntity.setImageUrlAfter(imgUrlAfter);
             //用户仓库创建，根据用户名找到用户实体
             UserEntity user = userRepository.findUserEntityByUsername(userName);
             imageEntity.setUser(user);
             imageEntity.setTitle(title);
             imageEntity.setCreateTime(LocalDateTime.now());
             imageRepository.save(imageEntity);
-
             //创建数组添加
             List<UploadResponse> uploadResponseList = new ArrayList<>();
             List<ImageEntity> imageEntities = imageRepository.findAllByUserId(user.getId());
@@ -130,12 +132,48 @@ public class ImageService {
         // 保存文件到OBS
         PutObjectRequest request = new PutObjectRequest("vangogh-test", fileName, imageFile.getInputStream());
         PutObjectResult result = obsClient.putObject(request);
-//        if (result.getStatusCode() != 200) {
-//            throw new IOException("存储失败: " + result.getStatusCode());
-//        }
+        if (result.getStatusCode() != 200) {
+            throw new IOException("存储失败: " + result.getStatusCode());
+        }
 
         // 生成文件的URL
-        return "http://vangogh-test.obs.cn-north-4.myhuaweicloud.com/images/" + fileName;
+        return "http://vangogh-test.obs.cn-north-4.myhuaweicloud.com/" + fileName;
+    }
+
+    private String saveHandledImage(MultipartFile imageFile) throws IOException {
+        // 生成唯一的文件名
+        String fileName = UUID.randomUUID().toString() + "." + FilenameUtils.getExtension(imageFile.getOriginalFilename());
+        ObsClient obsClient = new ObsClient(obsAk, obsSk, obsEndpoint);
+        // 保存文件到OBS
+        PutObjectRequest request = new PutObjectRequest("vangogh-test", fileName + "png", imageFile.getInputStream());
+        PutObjectResult result = obsClient.putObject(request);
+        if (result.getStatusCode() != 200) {
+            throw new IOException("存储失败: " + result.getStatusCode());
+        }
+        // 生成文件的URL
+        return "http://vangogh-test.obs.cn-north-4.myhuaweicloud.com/" + fileName + "png";
+    }
+
+    /**
+     * 获取处理后的图片
+     *
+     * @return 字节流
+     */
+    public MultipartFile getHandledImage(ImageHandleRequest imageHandleRequest) throws IOException {
+        String url = "http://139.9.235.250:5000/process_pic";
+
+        // 创建请求体
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<ImageHandleRequest> requestEntity = new HttpEntity<>(imageHandleRequest, headers);
+
+        // 发送POST请求并获取响应
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<byte[]> responseEntity = restTemplate.exchange(url, HttpMethod.POST, requestEntity, byte[].class);
+        byte[] imageBytes = responseEntity.getBody();
+
+        // 将字节数组转换为MultipartFile对象
+        return new MockMultipartFile("handled_image.png", imageBytes);
     }
 
     /**
@@ -150,11 +188,11 @@ public class ImageService {
 
         for (ImageEntity image : randomImages) {
             RecommendResponse customImage = new RecommendResponse();
-            customImage.setUrl(image.getImageUrl());
+            customImage.setUrl(image.getImageUrlAfter());
             customImage.setTitle(image.getTitle());
             customImage.setLikes(image.getLikes());
             customImage.setStatusCode(200);
-            customImage.setTimestamp(LocalDateTime.now());
+            customImage.setTimestamp(image.getCreateTime());
             customImages.add(customImage);
         }
         return ResponseEntity.ok(customImages);

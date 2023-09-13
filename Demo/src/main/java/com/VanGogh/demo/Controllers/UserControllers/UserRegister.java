@@ -5,6 +5,7 @@ package com.VanGogh.demo.Controllers.UserControllers;
 
 import com.VanGogh.demo.Controllers.Request.RegisterRequest;
 import com.VanGogh.demo.Services.UserService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -25,8 +26,8 @@ public class UserRegister {
      * @return ResponseEntity 包含注册响应或错误响应
      */
     @PostMapping(path = "/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest request) {
-        return userService.registerUser(request);
+    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest request, HttpSession session) {
+        return userService.registerUser(request,session);
     }
 
 }
