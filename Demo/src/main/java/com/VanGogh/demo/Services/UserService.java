@@ -1,6 +1,8 @@
 package com.VanGogh.demo.Services;
 
 import com.VanGogh.demo.Controllers.Request.LoginRequest;
+import com.VanGogh.demo.Controllers.Request.LogoutRequest;
+import com.VanGogh.demo.Controllers.Request.ProtectedRequest;
 import com.VanGogh.demo.Controllers.Request.RegisterRequest;
 import com.VanGogh.demo.Controllers.Response.ErrorResponse;
 import com.VanGogh.demo.Controllers.Response.LoginResponse;
@@ -58,7 +60,7 @@ public class UserService {
      * @param request 注册请求对象
      * @return ResponseEntity 包含注册响应或错误响应
      */
-    public ResponseEntity<?> registerUser(RegisterRequest request, HttpSession session) {
+    public ResponseEntity<?> registerUser(RegisterRequest request) {
         if (request.getUserName() == null) {
             ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "注册失败，用户名为空！ ", "/user/register");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
@@ -77,13 +79,8 @@ public class UserService {
         user.setUsername(request.getUserName());
         user.setPassword(hashedPassword);
         user.setRegistrationTime(LocalDateTime.now());
+        user.setLoginStatus(true);
         userRepository.save(user);
-        // 如果验证成功，创建JWT令牌并存储到会话中
-        String jwtToken = generateJwtToken(user.getUsername());
-        session.setAttribute("jwtToken", jwtToken);
-        session.setMaxInactiveInterval((int) sessionTimeout);
-
-
         // 创建响应对象
         RegisterResponse registerResponse = new RegisterResponse(LocalDateTime.now(), 200, user.getUsername());
 
@@ -94,19 +91,15 @@ public class UserService {
      * 用户登录
      *
      * @param loginRequest 用户登录请求对象
-     * @param session      HttpSession对象
      * @return ResponseEntity 包含登录响应或错误响应
      */
 
-    public ResponseEntity<?> login(LoginRequest loginRequest, HttpSession session) {
+    public ResponseEntity<?> login(LoginRequest loginRequest) {
         if (loginRequest.getUserName() == null) {
             ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 400, "用户名为空", "/user/login");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
-        if (session.getAttribute("jwtToken")!=null) {
-            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 400, "用户已登录", "/user/login");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-        }
+
         UserEntity user = userRepository.findUserEntityByUsername(loginRequest.getUserName());
         // 验证用户登录
         if (user == null) {
@@ -117,86 +110,86 @@ public class UserService {
             ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 400, "用户密码错误", "/user/login");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
-        // 如果验证成功，创建JWT令牌并存储到会话中
-        String jwtToken = generateJwtToken(user.getUsername());
-        session.setAttribute("jwtToken", jwtToken);
-        session.setMaxInactiveInterval((int) sessionTimeout);
-
+        if (user.getLoginStatus() == true) {
+            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 409, "用户已登录", "/user/login");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }
+        // 如果验证成功
+        user.setLoginStatus(true);
+        userRepository.save(user);
         LoginResponse loginResponse = new LoginResponse(LocalDateTime.now(), 200, user.getUsername(), user.getEmail());
         return ResponseEntity.ok(loginResponse);
     }
 
-    public ResponseEntity<?> protectedEndpoint(HttpSession session) {
-        try {
-            // 检查会话中的JWT令牌是否有效
-            String jwtToken = (String) session.getAttribute("jwtToken");
-            if ((jwtToken == null) || !verifyJwtToken(jwtToken)) {
-                ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 401, "用户未登录", "/user/login");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-            }
-            String userName = getUsernameFromJwtToken((String) session.getAttribute("jwtToken"));
-            UserEntity user = userRepository.findUserEntityByUsername(userName);
-            // 执行受保护的业务逻辑
-            LoginResponse loginResponse = new LoginResponse(LocalDateTime.now(), 200, user.getUsername(), user.getEmail());
-            return ResponseEntity.ok(loginResponse);
-        } catch (IllegalStateException e) {
-            // 会话超时或已失效
-            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 419, "会话超时或已失效", "/user/protected");
+    public ResponseEntity<?> protectedEndpoint(ProtectedRequest protectedRequest) {
+        if (protectedRequest.getUserName() == null) {
+            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "用户不存在", "/user/login");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
-    }
-
-
-    public ResponseEntity<?> logout(String userName, HttpSession session) {
-        try {
-            UserEntity user = userRepository.findUserEntityByUsername(userName);
-            if (user==null){
-                ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "用户不存在", "/user/login");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-            }
-            if (session.getAttribute("jwtToken")==null) {
-                ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 400, "用户已登出", "/user/login");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-            }
-            session.removeAttribute("jwtToken");
-            LogoutResponse logoutResponse = new LogoutResponse(LocalDateTime.now(), 200, user.getUsername(), user.getEmail());
-            return ResponseEntity.ok(logoutResponse);
-        } catch (IllegalStateException e) {
-            // 会话超时或已失效
-            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 419, "会话超时或已失效", "/user/protected");
+        UserEntity user = userRepository.findUserEntityByUsername(protectedRequest.getUserName());
+        if (user == null) {
+            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "用户不存在", "/user/login");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
-    }
-
-
-    private String generateJwtToken(String username) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + sessionTimeout * 1000);
-        return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(SignatureAlgorithm.HS512, key)
-                .compact();
-    }
-
-    private boolean verifyJwtToken(String jwtToken) {
-        try {
-            Jwts.parser().setSigningKey(key).parseClaimsJws(jwtToken);
-            return true;
-        } catch (ExpiredJwtException | MalformedJwtException ex) {
-            return false;
+        if (user.getLoginStatus() == false) {
+            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 401, "用户未登录", "/user/login");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
+        LoginResponse loginResponse = new LoginResponse(LocalDateTime.now(), 200, user.getUsername(), user.getEmail());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(loginResponse);
     }
 
-    private String getUsernameFromJwtToken(String jwtToken) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(key)
-                .parseClaimsJws(jwtToken)
-                .getBody();
 
-        return claims.getSubject();
+    public ResponseEntity<?> logout(LogoutRequest logoutRequest) {
+        if (logoutRequest.getUserName() == null) {
+            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "用户不存在", "/user/logout");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }
+        UserEntity user = userRepository.findUserEntityByUsername(logoutRequest.getUserName());
+        if (user == null) {
+            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 404, "用户不存在", "/user/logout");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }
+        if (user.getLoginStatus() == false) {
+            ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 401, "用户未登录", "/user/logout");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }
+        //修改登录状态
+        user.setLoginStatus(false);
+        userRepository.save(user);
+        LogoutResponse logoutResponse = new LogoutResponse(LocalDateTime.now(), 200, user.getUsername(), user.getEmail());
+        return ResponseEntity.ok(logoutResponse);
     }
+
+
+//    private String generateJwtToken(String username) {
+//        Date now = new Date();
+//        Date expiryDate = new Date(now.getTime() + sessionTimeout * 1000);
+//        return Jwts.builder()
+//                .setSubject(username)
+//                .setIssuedAt(now)
+//                .setExpiration(expiryDate)
+//                .signWith(SignatureAlgorithm.HS512, key)
+//                .compact();
+//    }
+
+//    private boolean verifyJwtToken(String jwtToken) {
+//        try {
+//            Jwts.parser().setSigningKey(key).parseClaimsJws(jwtToken);
+//            return true;
+//        } catch (ExpiredJwtException | MalformedJwtException ex) {
+//            return false;
+//        }
+//    }
+//
+//    private String getUsernameFromJwtToken(String jwtToken) {
+//        Claims claims = Jwts.parser()
+//                .setSigningKey(key)
+//                .parseClaimsJws(jwtToken)
+//                .getBody();
+//
+//        return claims.getSubject();
+//    }
 
 }
 

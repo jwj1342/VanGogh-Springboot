@@ -30,4 +30,15 @@ public class UserEntity {
 
     @Column
     private LocalDateTime registrationTime;
+
+    @Column
+    private  boolean loginStatus;
+
+    public boolean getLoginStatus() {
+        return loginStatus;
+    }
+
+    public void setLoginStatus(boolean loginStatus) {
+        this.loginStatus = loginStatus;
+    }
 }

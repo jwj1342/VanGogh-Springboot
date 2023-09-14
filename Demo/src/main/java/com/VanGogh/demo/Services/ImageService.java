@@ -95,23 +95,14 @@ public class ImageService {
             imageEntity.setTitle(title);
             imageEntity.setCreateTime(LocalDateTime.now());
             imageRepository.save(imageEntity);
-            //创建数组添加
-            List<UploadResponse> uploadResponseList = new ArrayList<>();
-            List<ImageEntity> imageEntities = imageRepository.findAllByUserId(user.getId());
 
-            for (ImageEntity imageEntity1 : imageEntities) {
-                UploadResponse uploadResponse = new UploadResponse();
-                uploadResponse.setTimestamp(LocalDateTime.now());
-                uploadResponse.setStatusCode(200);
-                uploadResponse.setImageUrl(imageEntity1.getImageUrl());
-                uploadResponse.setImageUrlAfter(imageEntity1.getImageUrlAfter());
-                uploadResponseList.add(uploadResponse);
-            }
+            UploadResponse uploadResponse = new UploadResponse();
+            uploadResponse.setImageUrl(imgUrlBefore);
+            uploadResponse.setImageUrlAfter(imgUrlAfter);
+            uploadResponse.setStatusCode(200);
+            uploadResponse.setTimestamp(LocalDateTime.now());
 
-            // 根据时间戳从新到旧排序
-            Collections.sort(uploadResponseList, (r1, r2) -> r2.getTimestamp().compareTo(r1.getTimestamp())); // 降序排序
-
-            return ResponseEntity.ok(uploadResponseList);
+            return ResponseEntity.ok(uploadResponse);
         } catch (IOException e) {
             ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), 400, "上传失败: " + e.getMessage(), "/image/upload");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);

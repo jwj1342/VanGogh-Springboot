@@ -26,8 +26,7 @@ public class UserRegister {
      * @return ResponseEntity 包含注册响应或错误响应
      */
     @PostMapping(path = "/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest request, HttpSession session) {
-        return userService.registerUser(request,session);
+    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest request) {
+        return userService.registerUser(request);
     }
-
 }

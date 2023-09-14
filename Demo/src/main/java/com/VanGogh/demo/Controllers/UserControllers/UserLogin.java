@@ -1,6 +1,7 @@
 package com.VanGogh.demo.Controllers.UserControllers;
 
 import com.VanGogh.demo.Controllers.Request.LoginRequest;
+import com.VanGogh.demo.Controllers.Request.ProtectedRequest;
 import com.VanGogh.demo.Services.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,13 +17,13 @@ public class UserLogin {
     private UserService userService;
 
     @PostMapping(path = "/login")
-    public ResponseEntity<?> login(@Validated @RequestBody LoginRequest loginRequest, HttpSession session) {
-        return userService.login(loginRequest, session);
+    public ResponseEntity<?> login(@Validated @RequestBody LoginRequest loginRequest) {
+        return userService.login(loginRequest);
     }
 
     @PostMapping(path = "/protected")
-    public ResponseEntity<?> protectedEndpoint(HttpSession session) {
-        return userService.protectedEndpoint(session);
+    public ResponseEntity<?> protectedEndpoint(@RequestBody ProtectedRequest protectedRequest) {
+        return userService.protectedEndpoint(protectedRequest);
     }
 
 }
