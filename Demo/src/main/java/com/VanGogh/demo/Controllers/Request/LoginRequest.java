@@ -1,22 +1,35 @@
 package com.VanGogh.demo.Controllers.Request;
 
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+
+/**
+ * 登录请求类，用于接收登录请求的参数。
+ */
+@Data
 public class LoginRequest {
-    private String userName;
+
+    /**
+     * 密码
+     */
     private String password;
 
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
+    /**
+     * 用户名
+     */
+    private String userName;
 
-    public void setPassword(String password) {
+
+    /**
+     * 时间戳
+     */
+    private LocalDateTime timestamp;
+
+    public LoginRequest(String password, String userName,  LocalDateTime timestamp) {
         this.password = password;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public String getPassword() {
-        return password;
+        this.userName = userName;
+        this.timestamp = timestamp;
     }
 }

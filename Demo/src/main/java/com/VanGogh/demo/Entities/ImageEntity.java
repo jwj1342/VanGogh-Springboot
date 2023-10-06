@@ -1,87 +1,49 @@
 package com.VanGogh.demo.Entities;
 
 import jakarta.persistence.*;
-import org.springframework.web.multipart.MultipartFile;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
+@Data // 自动生成getter、setter、equals、hashCode等方法
 public class ImageEntity {
+    /**
+     * 图片ID
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
+    /**
+     * 图片所属用户
+     */
     @ManyToOne
     @JoinColumn(name = "user_id")
     private UserEntity user;
 
-    @Column(name = "likes")
+    /**
+     * 图片点赞数
+     */
     private int likes;
 
-    @Column(name = "image_url")
+    /**
+     * 图片URL
+     */
     private String imageUrl;
-    @Column(name = "title")
+    /**
+     * 处理过后图片URL
+     */
+    private String imageUrlAfter;
+
+    /**
+     * 图片标题
+     */
     private String title;
 
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(String createTime) {
-        this.createTime = createTime;
-    }
-
-    @Column(name = "createTime")
-    private String createTime;
-
-    @Transient
-    private MultipartFile imageFile;
-
-    public ImageEntity() {
-    }
-
-    // Getters and Setters
-
-    public UserEntity getUser() {
-        return user;
-    }
-
-    public void setUser(UserEntity user) {
-        this.user = user;
-    }
-
-    public int getLikes() {
-        return likes;
-    }
-
-    public void setLikes(int likes) {
-        this.likes = likes;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    public MultipartFile getImageFile() {
-        return imageFile;
-    }
-
-    public void setImageFile(MultipartFile imageFile) {
-        this.imageFile = imageFile;
-    }
-
-    public Long getId() {
-        return id;
-    }
+    /**
+     * 图片创建时间
+     */
+    private LocalDateTime createTime;
 }

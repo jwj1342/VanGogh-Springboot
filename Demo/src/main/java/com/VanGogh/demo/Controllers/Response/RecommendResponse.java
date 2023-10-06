@@ -7,10 +7,10 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * 上传响应类，用于封装上传图片的信息。
+ * 推荐响应类，用于封装推荐信息。
  */
 @Data
-public class UploadResponse {
+public class RecommendResponse {
     /**
      * 时间戳
      */
@@ -20,11 +20,15 @@ public class UploadResponse {
      */
     private int statusCode;
     /**
-     * 上传图片的url
+     * 标题
      */
-    private String imageUrl;
+    private String title;
     /**
-     * 处理后图片的url
+     * 图片url
      */
-    private String imageUrlAfter;
+    private String url;
+    /**
+     * 点赞数
+     */
+    private int likes;
 }
